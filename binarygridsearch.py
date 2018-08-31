@@ -21,7 +21,7 @@ def setSearchStepAndArgs(lowerArg, upperArg, decimals):
                 upperArg)
         
 
-def compareVals(X, y, model, params, metric, var, decimals, newArg, lastArg, lastVal, timesAndScores):
+def compareVals(X, y, model, params, var, decimals, newArg, lastArg, lastVal, timesAndScores):
     if np.abs(newArg-lastArg)<=10**(-decimals):
         return pd.DataFrame(timesAndScores)
     
@@ -35,7 +35,6 @@ def compareVals(X, y, model, params, metric, var, decimals, newArg, lastArg, las
         start_time = time.perf_counter()
         lowerVal = model(X, 
                          y,
-                         metric,  
                          {**params,
                           **{var:lowerArg}})
         end_time = time.perf_counter()
@@ -61,7 +60,6 @@ def compareVals(X, y, model, params, metric, var, decimals, newArg, lastArg, las
         start_time = time.perf_counter()
         upperVal = model(X, 
                          y,
-                         metric,
                          {**params, 
                           **{var:upperArg}}, 
                          )
@@ -79,7 +77,6 @@ def compareVals(X, y, model, params, metric, var, decimals, newArg, lastArg, las
                            y, 
                            model,
                            params,
-                           metric, 
                            var,
                            decimals,
                            upperArg - searchStep,
@@ -92,7 +89,6 @@ def compareVals(X, y, model, params, metric, var, decimals, newArg, lastArg, las
                            y, 
                            model,
                            params, 
-                           metric, 
                            var,
                            decimals,
                            lowerArg + searchStep,
@@ -101,7 +97,7 @@ def compareVals(X, y, model, params, metric, var, decimals, newArg, lastArg, las
                            timesAndScores)
 
     
-def compareValsBaseCase(X, y, model, params, metric, var, decimals, lowerArg, upperArg):
+def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
     
     searchStep, lowerArg, upperArg = setSearchStepAndArgs(lowerArg, upperArg, decimals)
 
@@ -111,7 +107,6 @@ def compareValsBaseCase(X, y, model, params, metric, var, decimals, lowerArg, up
     start_time = time.perf_counter()
     lowerVal = model(X, 
                      y,
-                     metric,
                      {**params,
                       **{var:lowerArg}},
                      )
@@ -124,7 +119,6 @@ def compareValsBaseCase(X, y, model, params, metric, var, decimals, lowerArg, up
     start_time = time.perf_counter()
     upperVal = model(X, 
                      y,
-                     metric,
                      {**params, 
                       **{var:upperArg}}, 
                      )
@@ -142,7 +136,6 @@ def compareValsBaseCase(X, y, model, params, metric, var, decimals, lowerArg, up
                            y, 
                            model,
                            params, 
-                           metric, 
                            var,
                            decimals,
                            upperArg - searchStep,
@@ -155,7 +148,6 @@ def compareValsBaseCase(X, y, model, params, metric, var, decimals, lowerArg, up
                            y,  
                            model,
                            params,  
-                           metric, 
                            var,
                            decimals,
                            lowerArg + searchStep,
@@ -163,7 +155,7 @@ def compareValsBaseCase(X, y, model, params, metric, var, decimals, lowerArg, up
                            lowerVal, 
                            timesAndScores)
 
-def standardizeAddRatioAndMelt(inputDF):
+def standardizeAddRatioAndMelt(inputDF, html=False):
     df = inputDF.copy()
     
     #Feature scaling.  Keeps both values positive, which is better for a ratio
@@ -181,6 +173,10 @@ def standardizeAddRatioAndMelt(inputDF):
                              (df["scoreTimeRatio"].max()
                               - df["scoreTimeRatio"].min())) 
     
+    if html==True:
+        print(df
+              .set_index(df.iloc[:,0])
+              .to_html())
     display(df)
     
     return df.melt(id_vars=df.columns[0])
@@ -192,8 +188,13 @@ def plotTimeAndScore(melted):
         color='variable:N')
            ).properties(width=400)
 
-def showTimeScoreChartAndGraph(df):
-    melted = standardizeAddRatioAndMelt(df)
+def showTimeScoreChartAndGraph(df, html=False):
+    if html==True:
+        print(df
+              .set_index(df.iloc[:,0])
+              .to_html())
+        print("<br>")
+    melted = standardizeAddRatioAndMelt(df, html)
     display(df)
     display(plotTimeAndScore(melted))
 
@@ -212,12 +213,11 @@ def getTopVals(df):
                          ascending=False)
             .iloc[0,0])
 
-def binarySearchParams(X, y, model, params, metric, paramRanges):
+def binarySearchParams(X, y, model, params, paramRanges):
     valsAndScores = {x[0] : compareValsBaseCase(X, 
                                                 y,
                                                 model,
                                                 params, 
-                                                metric, 
                                                 *x)
                for x in paramRanges}
     
@@ -225,7 +225,6 @@ def binarySearchParams(X, y, model, params, metric, paramRanges):
     
     score = model(X, 
                   y, 
-                  metric,
                   {**params, 
                    **topVals},
                   )
@@ -237,13 +236,12 @@ def binarySearchParams(X, y, model, params, metric, paramRanges):
                                for x in valsAndScores.values())}
 
 
-def binarySearchParamsParallel(X, y, model, params, metric, paramRanges):
+def binarySearchParamsParallel(X, y, model, params, paramRanges):
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
         args_generator = ((X, 
                            y,
                            model,
                            params, 
-                           metric, 
                            *x) for x in paramRanges)
         results = p.starmap(compareValsBaseCase, args_generator)
         name_result_tuples = zip((x[0] for x in paramRanges), 
@@ -254,7 +252,6 @@ def binarySearchParamsParallel(X, y, model, params, metric, paramRanges):
     
     score = model(X, 
                   y, 
-                  metric,
                   {**params, 
                    **topVals},
                   )
