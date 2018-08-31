@@ -98,7 +98,7 @@ def compareVals(X, y, model, params, var, decimals, newArg, lastArg, lastVal, ti
 
     
 def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
-    """Run the binary search
+        """Run the binary search
     
     Parameters
     ----------
@@ -127,6 +127,7 @@ def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
         to run
     
     """
+    
     searchStep, lowerArg, upperArg = setSearchStepAndArgs(lowerArg, upperArg, decimals)
 
 
@@ -183,7 +184,7 @@ def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
                            lowerVal, 
                            timesAndScores)
 
-def standardizeAddRatioAndMelt(inputDF):
+def standardizeAddRatioAndMelt(inputDF, html=False):
     df = inputDF.copy()
     
     #Feature scaling.  Keeps both values positive, which is better for a ratio
@@ -201,6 +202,10 @@ def standardizeAddRatioAndMelt(inputDF):
                              (df["scoreTimeRatio"].max()
                               - df["scoreTimeRatio"].min())) 
     
+    if html==True:
+        print(df
+              .set_index(df.iloc[:,0])
+              .to_html())
     display(df)
     
     return df.melt(id_vars=df.columns[0])
@@ -212,8 +217,13 @@ def plotTimeAndScore(melted):
         color='variable:N')
            ).properties(width=400)
 
-def showTimeScoreChartAndGraph(df):
-    melted = standardizeAddRatioAndMelt(df)
+def showTimeScoreChartAndGraph(df, html=False):
+    if html==True:
+        print(df
+              .set_index(df.iloc[:,0])
+              .to_html())
+        print("<br>")
+    melted = standardizeAddRatioAndMelt(df, html)
     display(df)
     display(plotTimeAndScore(melted))
 
