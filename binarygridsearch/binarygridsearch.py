@@ -98,7 +98,35 @@ def compareVals(X, y, model, params, var, decimals, newArg, lastArg, lastVal, ti
 
     
 def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
+    """Run the binary search
     
+    Parameters
+    ----------
+    X : NumPy array
+        Training data
+    y : 1d NumPy array
+        Training data answers
+    model : function
+        A function that takes in some arguments and returns a metric for an ML algo
+    params : dictionary
+        Parameters for our ML algo that we want in every run
+    var: string
+        The parameter we want to optimize
+    decimals: int
+        How many decimals of difference we want between test values of the parameter
+        For instance, some things have to be whole numbers, but others are floats
+    lowerArg: int or float
+        Lower limit to search
+    upperArg: int or float
+        Upper limit to search
+        
+    Returns
+    -------
+    pandas.DataFrame
+        Contains the values that were tested, the performance, and the time it took
+        to run
+    
+    """
     searchStep, lowerArg, upperArg = setSearchStepAndArgs(lowerArg, upperArg, decimals)
 
 
@@ -155,7 +183,7 @@ def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
                            lowerVal, 
                            timesAndScores)
 
-def standardizeAddRatioAndMelt(inputDF, html=False):
+def standardizeAddRatioAndMelt(inputDF):
     df = inputDF.copy()
     
     #Feature scaling.  Keeps both values positive, which is better for a ratio
@@ -173,10 +201,6 @@ def standardizeAddRatioAndMelt(inputDF, html=False):
                              (df["scoreTimeRatio"].max()
                               - df["scoreTimeRatio"].min())) 
     
-    if html==True:
-        print(df
-              .set_index(df.iloc[:,0])
-              .to_html())
     display(df)
     
     return df.melt(id_vars=df.columns[0])
@@ -188,13 +212,8 @@ def plotTimeAndScore(melted):
         color='variable:N')
            ).properties(width=400)
 
-def showTimeScoreChartAndGraph(df, html=False):
-    if html==True:
-        print(df
-              .set_index(df.iloc[:,0])
-              .to_html())
-        print("<br>")
-    melted = standardizeAddRatioAndMelt(df, html)
+def showTimeScoreChartAndGraph(df):
+    melted = standardizeAddRatioAndMelt(df)
     display(df)
     display(plotTimeAndScore(melted))
 
