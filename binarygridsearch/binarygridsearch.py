@@ -98,7 +98,7 @@ def compareVals(X, y, model, params, var, decimals, newArg, lastArg, lastVal, ti
 
     
 def compareValsBaseCase(X, y, model, params, var, decimals, lowerArg, upperArg):
-        """Run the binary search
+    """Run the binary search
     
     Parameters
     ----------
